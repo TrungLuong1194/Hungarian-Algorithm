@@ -138,7 +138,8 @@ function result = markPlusZeros(C)
 	sizeMatrix = C.sizeMatrix;
 	markedRows = C.markedRows;
 	markedColumns = C.markedColumns;
-	count = 0;
+	count = 0;     %% Count zero in a row or a columns
+	plus = 0;			%% Count plus
 
 	for r = 1:sizeMatrix
 		for c = 1:sizeMatrix
@@ -149,6 +150,7 @@ function result = markPlusZeros(C)
 
 		if count > 1
 			markedRows(r) = true;
+			plus++;
 		end
 
 		count = 0;
@@ -163,6 +165,7 @@ function result = markPlusZeros(C)
 
 		if count > 1
 			markedColumns(c) = true;
+			plus++;
 		end
 
 		count = 0;
@@ -172,6 +175,7 @@ function result = markPlusZeros(C)
 		for c = 1:sizeMatrix
 			if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
 				markedRows(r) = true;
+				plus++;
 			end
 		end
 	end

@@ -1,6 +1,6 @@
 function Hungarian()
     clc();
-    MAXIMIZATION = true;
+    MAXIMIZATION = false;
 
     fprintf('\n\n\n\n\n---------------------------\n\n');
 
@@ -128,7 +128,6 @@ function result = subColumnMin(C)
 
 	for i = 1:sizeMatrix
 		col = matrix(:,i);
-
 		matrix(:,i) = col - min(col);
 	end
 
@@ -145,7 +144,6 @@ function result = subRowMin(C)
 
 	for i = 1:sizeMatrix
 		row = matrix(i,:);
-
 		matrix(i,:) = row - min(row);
 	end
 
@@ -214,10 +212,10 @@ function result = markPlusZeros(C)
 		count = 0;
 	end
 
-	for r = 1:sizeMatrix
-		for c = 1:sizeMatrix
+	for c = 1:sizeMatrix
+		for r = 1:sizeMatrix
 			if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
-				markedRows(r) = true;
+				markedColumns(c) = true;
 				numbOfPlus++;
 			end
 		end
@@ -235,6 +233,7 @@ end
 function result = reMarkPlusZeros(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;
+	star = C.star;
 	markedRows = C.markedRows;
 	markedColumns = C.markedColumns;
 	minNumber = intmax;
@@ -269,11 +268,16 @@ function result = reMarkPlusZeros(C)
 			if (markedColumns(r) == true)
 				markedColumns(r) = false;
 			end
+
+			if star(r,c) == true
+				star(r,c) = false;
+			end
 		end
 	end
 
 	result = C;
 	result.matrix = matrix;
+	result.star = star;
 	result.markedRows = markedRows;
 	result.markedColumns = markedColumns;
 end
@@ -284,66 +288,89 @@ end
 function result = optimizedMatrix(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;
-	star = C.star;
+	markedRows = C.markedRows;
+	markedColumns = C.markedColumns;
 	index = 0;
-	count = 0;     %% Number of zeros in a row or a columns
+	count = 0;     			%% Number of zeros in a row or a columns        
+	numbOfMarkedColumns = 0;
+	
+	firstZero = false;    
 
-	for r = 1:sizeMatrix
-		for c = 1:sizeMatrix
-			if star(r,c) == true
-				index = c;
-				count++;
-			end
-		end
-
-		if count == 1
-			matrix(:,index) = 0;
-			star(:,index) = false;
-			matrix(r,:) = 0;
-			star(r,:) = false;
-			matrix(r,index) = 1;
-			star(r,index) = false;
-		end
-
-		count = 0;
-	end
-
-	for c = 1:sizeMatrix
+	while true
 		for r = 1:sizeMatrix
-			if star(r,c) == true
-				index = r;
-				count++;
+			for c = 1:sizeMatrix
+				if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
+					index = c;
+					count++;
+				end
 			end
-		end
 
-		if count == 1
-			matrix(index,:) = 0;
-			star(index,:) = false;
-			matrix(:,c) = 0;
-			star(:,c) = false;
-			matrix(index,c) = 1;
-			star(index,c) = false;
-		end
-
-		count = 0;
-	end
-
-	for r = 1:sizeMatrix
-		for c = 1:sizeMatrix
-			if star(r,c) == true
-				matrix(:,c) = 0;
-				star(:,c) = false;
+			if count == 1
+				matrix(:,index) = 0;
 				matrix(r,:) = 0;
-				star(r,:) = false;
-				matrix(r,c) = 1;
-				star(r,c) = false;
+				matrix(r,index) = 1;
+				markedRows(r) = true;
+				markedColumns(index) = true;
+				numbOfMarkedColumns++;
 			end
+
+			count = 0;
+		end
+
+		if (numbOfMarkedColumns == sizeMatrix)
+			break;
+		end
+
+		for c = 1:sizeMatrix
+			for r = 1:sizeMatrix
+				if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
+					index = r;
+					count++;
+				end
+			end
+
+			if count == 1
+				matrix(index,:) = 0;
+				matrix(:,c) = 0;
+				matrix(index,c) = 1;
+				markedRows(index) = true;
+				markedColumns(c) = true;
+				numbOfMarkedColumns++;
+			end
+
+			count = 0;
+		end
+
+		if (numbOfMarkedColumns == sizeMatrix)
+			break;
+		end
+
+		for r = 1:sizeMatrix
+			for c = 1:sizeMatrix
+				if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
+					matrix(:,c) = 0;
+					matrix(r,:) = 0;
+					matrix(r,c) = 1;
+					markedRows(r) = true;
+					markedColumns(c) = true;
+					numbOfMarkedColumns++;
+					firstZero = true;
+					break;
+				end
+			end
+
+			if firstZero
+				break;
+			end
+		end
+
+		if (numbOfMarkedColumns == sizeMatrix)
+			break;
 		end
 	end
 
 	result = C;
 	result.matrix = matrix;
-	result.star = star;
 end
 
 

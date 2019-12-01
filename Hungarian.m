@@ -33,8 +33,20 @@ function Hungarian()
 	    C = markPlusZeros(C);
 	    dispC(C, 'Marked +');
 
-	    %% Step 5
-	    C = reMarkPlusZeros(C);
+	    %% Step 5.2
+	    if C.numbOfPlus == C.sizeMatrix
+	    	C = unMark(C);
+	    	dispC(C, 'Unmarked');
+	    	break;
+	    end
+
+	    %% Step 5.1
+	    [C, minNumber] = findMinAndCal(C);
+	    fprintf('Mininum number: %2d \n', minNumber);
+	    dispC(C, 'Calculate');
+
+	    %% Step 5.2
+	    C = unMark(C);
 	    dispC(C, 'Unmarked');
 	end
 
@@ -229,11 +241,10 @@ end
 
 
 %%-----------------------------------------------------------------------------
-%% Step 5: Find min number of matrix don't covered and unmark
-function result = reMarkPlusZeros(C)
+%% Step 5.1: Find min number of matrix don't covered and calculate
+function [result, minNumber] = findMinAndCal(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;
-	star = C.star;
 	markedRows = C.markedRows;
 	markedColumns = C.markedColumns;
 	minNumber = intmax;
@@ -258,6 +269,21 @@ function result = reMarkPlusZeros(C)
 		end
 	end
 
+	result = C;
+	result.matrix = matrix;
+	result.markedRows = markedRows;
+	result.markedColumns = markedColumns;
+end
+
+
+%%-----------------------------------------------------------------------------
+%% Step 5.2: UnMark
+function result = unMark(C)
+	sizeMatrix = C.sizeMatrix;
+	star = C.star;
+	markedRows = C.markedRows;
+	markedColumns = C.markedColumns;
+
 	%% Unmarked matrix
 	for r = 1:sizeMatrix
 		for c = 1:sizeMatrix
@@ -276,7 +302,6 @@ function result = reMarkPlusZeros(C)
 	end
 
 	result = C;
-	result.matrix = matrix;
 	result.star = star;
 	result.markedRows = markedRows;
 	result.markedColumns = markedColumns;

@@ -1,6 +1,6 @@
 function Hungarian()
     clc();
-    MAXIMIZATION = false;
+    MAXIMIZATION = true;
 
     fprintf('\n\n\n\n\n---------------------------\n\n');
 
@@ -29,7 +29,7 @@ function Hungarian()
 	    C = markStarZeros(C);
 	    dispC(C, 'Marked *');
 
-	    %% Step 4.1
+	    %% Step 4.2
 	    C = markPlusZeros(C);
 	    dispC(C, 'Marked +');
 
@@ -39,6 +39,8 @@ function Hungarian()
 	    	dispC(C, 'Unmarked');
 	    	break;
 	    end
+
+	    C.numbOfPlus = 0;
 
 	    %% Step 5.1
 	    [C, minNumber] = findMinAndCal(C);
@@ -120,7 +122,7 @@ end
 %%-----------------------------------------------------------------------------
 %% Step 1: Initial matrix
 function C = initialMatrix()
-    matrix = [4 10 7 3 6; 5 6 2 7 4; 9 5 6 8 3; 2 3 5 4 8; 8 5 4 9 3];
+    matrix = [4 2 8 7 5; 4 5 7 8 3; 2 2 1 7 4; 9 5 3 2 9; 5 3 4 6 1];
 
     [rows, cols] = size(matrix);
     assert(rows == cols, 'Matrix should be square!');
@@ -189,47 +191,85 @@ end
 function result = markPlusZeros(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;
+	star = C.star;
 	markedRows = C.markedRows;
 	markedColumns = C.markedColumns;
 	numbOfPlus = C.numbOfPlus;
 	count = 0;     %% Number of zeros in a row or a columns
+	index = 1;     %% Save location = 0
+	countZeros = 0;
+
+	while true
+		for r = 1:sizeMatrix
+			for c = 1:sizeMatrix
+				if star(r,c) == true
+					index = c;
+					count++;
+				end
+			end
+
+			if count == 1
+				markedColumns(index) = true;
+			end
+
+			count = 0;
+		end
+
+		for r = 1:sizeMatrix
+			for c = 1:sizeMatrix
+				if (star(r,c) == true && markedColumns(c) == true)
+					star(r,c) = false;
+				end
+			end
+		end
+
+		for c = 1:sizeMatrix
+			for r = 1:sizeMatrix
+				if star(r,c) == true
+					index = r;
+					count++;
+				end
+			end
+
+			if count == 1
+				markedRows(index) = true;
+			end
+
+			count = 0;
+		end
+
+		for c = 1:sizeMatrix
+			for r = 1:sizeMatrix
+				if (star(r,c) == true && markedRows(r) == true)
+					star(r,c) = false;
+				end
+			end
+		end
+
+		countZeros = 0;
+
+		for r = 1:sizeMatrix
+			for c = 1:sizeMatrix
+				if star(r,c) == true
+					countZeros++;
+				end
+			end
+		end
+
+		if countZeros == 0
+			break;
+		end
+	end
 
 	for r = 1:sizeMatrix
-		for c = 1:sizeMatrix
-			if matrix(r,c) == 0
-				count++;
-			end
-		end
-
-		if count > 1
-			markedRows(r) = true;
+		if markedRows(r) == true
 			numbOfPlus++;
 		end
-
-		count = 0;
 	end
 
 	for c = 1:sizeMatrix
-		for r = 1:sizeMatrix
-			if matrix(r,c) == 0 && markedRows(r) == false
-				count++;
-			end
-		end
-
-		if count > 1
-			markedColumns(c) = true;
+		if markedColumns(c) == true
 			numbOfPlus++;
-		end
-
-		count = 0;
-	end
-
-	for c = 1:sizeMatrix
-		for r = 1:sizeMatrix
-			if (matrix(r,c) == 0 && markedRows(r) == false && markedColumns(c) == false)
-				markedColumns(c) = true;
-				numbOfPlus++;
-			end
 		end
 	end
 
@@ -245,6 +285,7 @@ end
 function [result, minNumber] = findMinAndCal(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;
+	star = C.star;
 	markedRows = C.markedRows;
 	markedColumns = C.markedColumns;
 	minNumber = intmax;
@@ -269,8 +310,17 @@ function [result, minNumber] = findMinAndCal(C)
 		end
 	end
 
+	for r = 1:sizeMatrix
+		for c = 1:sizeMatrix
+			if (star(r,c) == true && matrix(r,c) != 0)
+				star(r,c) = false;
+			end
+		end
+	end
+
 	result = C;
 	result.matrix = matrix;
+	result.star = star;
 	result.markedRows = markedRows;
 	result.markedColumns = markedColumns;
 end
@@ -309,7 +359,7 @@ end
 
 
 %%-----------------------------------------------------------------------------
-%% Optimized matrix
+%% Step 6: Optimized matrix
 function result = optimizedMatrix(C)
 	matrix = C.matrix;
 	sizeMatrix = C.sizeMatrix;

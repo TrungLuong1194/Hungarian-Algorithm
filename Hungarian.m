@@ -1,6 +1,6 @@
 function Hungarian()
     clc();
-    MAXIMIZATION = true;
+    MAXIMIZATION = false;
 
     fprintf('\n\n\n\n\n---------------------------\n\n');
 
@@ -124,6 +124,8 @@ end
 function C = initialMatrix()
     matrix = [4 2 8 7 5; 4 5 7 8 3; 2 2 1 7 4; 9 5 3 2 9; 5 3 4 6 1];
 
+    % matrix = [4 10 10 3 6; 5 6 2 7 4; 9 5 6 8 3; 2 3 5 4 8; 8 5 4 9 3];
+
     [rows, cols] = size(matrix);
     assert(rows == cols, 'Matrix should be square!');
 
@@ -236,6 +238,16 @@ function result = markPlusZeros(C)
 			end
 
 			count = 0;
+		end
+
+		for r1 = 1:sizeMatrix-1
+			for r2 = r1+1:sizeMatrix
+				for c = 1:sizeMatrix
+					if (markedColumns(c) == false && star(r1,c) == true && star(r2,c) == true)
+						markedColumns(c) = true;
+					end
+				end
+			end
 		end
 
 		for c = 1:sizeMatrix
